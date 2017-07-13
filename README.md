@@ -1,82 +1,110 @@
-# ng2-semantic-ui
+<!-- Logo -->
+<p align="center">
+  <a href="https://react.semantic-ui.com">
+    <img height="128" width="238" src="https://raw.githubusercontent.com/edcarroll/ng2-semantic-ui/master/demo/src/assets/logo.png">
+  </a>
+</p>
 
-Semantic UI Angular 2 Integrations, written in pure AngularJS - **no JQuery required**.
+<!-- Name -->
+<h1 align="center">
+  <a href="https://edcarroll.github.io/ng2-semantic-ui">ng2-semantic-ui</a>
+</h1>
 
-## Demo & Usage
+<!-- Badges -->
+<p align="center">
+  <a href="https://gitter.im/ng2-semantic-ui/Lobby">
+    <img alt="Gitter" src="https://img.shields.io/gitter/room/ng2-semantic-ui/Lobby.js.svg?style=flat-square" />
+  </a>
+  <a href="https://travis-ci.org/edcarroll/ng2-semantic-ui">
+    <img alt="Travis CI" src="https://img.shields.io/travis/edcarroll/ng2-semantic-ui.svg?style=flat-square" />
+  </a>
+  <a href="https://www.npmjs.com/package/ng2-semantic-ui">
+    <img alt="npm" src="https://img.shields.io/npm/v/ng2-semantic-ui.svg?style=flat-square" />
+  </a>
+  <a href="https://www.npmjs.com/package/ng2-semantic-ui">
+    <img alt="monthly downloads" src="https://img.shields.io/npm/dm/ng2-semantic-ui.svg?style=flat-square" />
+  </a>
+</p>
 
-[ng2-semantic-ui](http://edcarroll.github.io/ng2-semantic-ui/)
+Semantic UI Angular Integrations, written in pure Angular - **no JQuery required**.
 
-## Installation
+## Introduction
 
-To install this library, run:
-```bash
-$ npm install ng2-semantic-ui --save
-```
+Angular and jQuery don't go together - this is the fundamental principal of this library. It provides Angular component versions of the Semantic UI modules, so that you don't need to add jQuery to your app.
 
-Next include the Semantic UI CSS file in your `index.html` (you can include a manually compiled one if you use themes):
-```html
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.4/semantic.min.css">
-```
+Note that only Semantic UI elements that use jQuery are recreated here - those written purely in CSS aren't included as they can be used in Angular apps already.
 
-Once installed you need to import the main module:
-```ts
-import {SuiModule} from 'ng2-semantic-ui/ng2-semantic-ui';
-```
+## Installation & Usage
 
-Finally import the main module into your application module:
-```ts
-import {SuiModule} from 'ng2-semantic-ui/ng2-semantic-ui';
-
-@NgModule({
-    declarations: [AppComponent, ...],
-    imports: [SuiModule, ...],  
-    bootstrap: [AppComponent]
-})
-export class AppModule {}
-```
-
-N.B. you can import individual component modules:
-```ts
-import {SuiCheckboxModule, SuiRatingModule} from 'ng2-semantic-ui/ng2-semantic-ui';
-```
-
-Now you're good to go!
+See the [Documentation](https://edcarroll.github.io/ng2-semantic-ui) for installation instructions and extensive examples.
 
 ## Dependencies
 
-* [Angular 2](https://angular.io) (^2.0.0 final)
+* [Angular](https://angular.io) (^4.1.0)
 * [Semantic UI CSS](http://semantic-ui.com/) (jQuery is **not** required)
 
 ## Components
 
 The current list of available components with links to their docs is below:
 
-* [Accordion](http://edcarroll.github.io/ng2-semantic-ui/#/components/accordion)
-* [Checkbox](http://edcarroll.github.io/ng2-semantic-ui/#/components/checkbox)
-* [Collapse](http://edcarroll.github.io/ng2-semantic-ui/#/components/collapse)
-* [Dimmer](http://edcarroll.github.io/ng2-semantic-ui/#/components/dimmer)
-* [Dropdown](http://edcarroll.github.io/ng2-semantic-ui/#/components/dropdown)
-* [Message](http://edcarroll.github.io/ng2-semantic-ui/#/components/message)
-* [Progress](http://edcarroll.github.io/ng2-semantic-ui/#/components/progress)
-* [Rating](http://edcarroll.github.io/ng2-semantic-ui/#/components/rating)
-* [Search](http://edcarroll.github.io/ng2-semantic-ui/#/components/search)
-* [Select](http://edcarroll.github.io/ng2-semantic-ui/#/components/select)
-* [Tabs](http://edcarroll.github.io/ng2-semantic-ui/#/components/tabs)
-* [Transition](http://edcarroll.github.io/ng2-semantic-ui/#/components/transition)
+* Collections
+  - [Message](https://edcarroll.github.io/ng2-semantic-ui/#/collections/message)
+  - [Pagination](https://edcarroll.github.io/ng2-semantic-ui/#/collections/pagination)
+* Modules
+  - [Accordion](https://edcarroll.github.io/ng2-semantic-ui/#/modules/accordion)
+  - [Checkbox](https://edcarroll.github.io/ng2-semantic-ui/#/modules/checkbox)
+  - [Collapse](https://edcarroll.github.io/ng2-semantic-ui/#/modules/collapse)
+  - [Datepicker](https://edcarroll.github.io/ng2-semantic-ui/#/modules/datepicker)
+  - [Dimmer](https://edcarroll.github.io/ng2-semantic-ui/#/modules/dimmer)
+  - [Dropdown](https://edcarroll.github.io/ng2-semantic-ui/#/modules/dropdown)
+  - [Modal](https://edcarroll.github.io/ng2-semantic-ui/#/modules/modal)
+  - [Popup](https://edcarroll.github.io/ng2-semantic-ui/#/modules/popup)
+  - [Progress](https://edcarroll.github.io/ng2-semantic-ui/#/modules/progress)
+  - [Rating](https://edcarroll.github.io/ng2-semantic-ui/#/modules/rating)
+  - [Search](https://edcarroll.github.io/ng2-semantic-ui/#/modules/search)
+  - [Select](https://edcarroll.github.io/ng2-semantic-ui/#/modules/select)
+  - [Sidebar](https://edcarroll.github.io/ng2-semantic-ui/#/modules/sidebar)
+  - [Tabs](https://edcarroll.github.io/ng2-semantic-ui/#/modules/tabs)
+  - [Transition](https://edcarroll.github.io/ng2-semantic-ui/#/modules/transition)
+* Behaviors
+  - [Localization](https://edcarroll.github.io/ng2-semantic-ui/#/behaviors/localization)
+
+## Want to help?
+
+Want to file a bug, contribute some code, or improve documentation? Great! Please read the [contributing guidelines](https://github.com/edcarroll/ng2-semantic-ui/blob/master/CONTRIBUTING.md) to get going.
 
 ## Development
 
-To generate all library `*.js`, `*.js.map` and `*.d.ts` files:
+To generate all library files:
 
 ```bash
-$ npm run compile
-# use compile:w to watch for changes
+$ npm run compile:lib
+# use compile:lib:w to watch for changes
 ```
 
 To run the demo app (you must have [Angular-CLI](https://github.com/angular/angular-cli) installed):
 ```bash
 $ ng serve
 ```
+
+## Testing
+
+To run the unit tests suite:
+```bash
+$ npm run test
+```
+
+To run the unit test suit in watch mode (the whole suite is re-executed every code/test change):
+```bash
+$ npm run test:w
+```
+
+To generate code coverage report:
+```bash
+$ npm run test:cov
+```
+this will generate a folder `coverage` with the HTML report
+
 
 ## License
 

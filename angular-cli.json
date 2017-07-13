@@ -1,28 +1,32 @@
 {
   "project": {
-    "version": "1.0.0-beta.11-webpack.8",
+    "version": "1.0.0",
     "name": "ng2-semantic-ui"
   },
   "apps": [
     {
-      "root": "demo",
-      "outDir": "dist",
-      "assets": "assets",
+      "root": "demo/src",
+      "outDir": "demo/dist",
+      "assets": [
+        "assets",
+        "favicon.ico"
+      ],
       "index": "index.html",
       "main": "main.ts",
-      "test": "test.ts",
+      "test": "../../src/test.ts",
       "tsconfig": "tsconfig.json",
-      "prefix": "app",
+      "testTsconfig": "../../src/tsconfig.spec.json",
+      "prefix": "demo",
       "mobile": false,
       "styles": [
-          "css/style.css",
-          "css/code.css"
+        "css/styles.css",
+        "css/code.css"
       ],
       "scripts": [],
+      "environmentSource": "environments/environment.ts",
       "environments": {
-        "source": "environments/environment.ts",
-        "prod": "environments/environment.prod.ts",
-        "dev": "environments/environment.dev.ts"
+        "dev": "environments/environment.ts",
+        "prod": "environments/environment.prod.ts"
       }
     }
   ],
@@ -35,12 +39,23 @@
   },
   "test": {
     "karma": {
-      "config": "./karma.conf.js"
+      "config": "./src/karma.conf.ts"
     }
   },
   "defaults": {
     "styleExt": "css",
     "prefixInterfaces": false,
-    "lazyRoutePrefix": "+"
+    "inline": {
+      "style": false,
+      "template": false
+    },
+    "spec": {
+      "class": false,
+      "component": true,
+      "directive": true,
+      "module": false,
+      "pipe": true,
+      "service": true
+    }
   }
 }
