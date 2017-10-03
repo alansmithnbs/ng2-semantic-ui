@@ -1,11 +1,15 @@
 
 import { Directive, Host, Input, ElementRef, HostBinding, HostListener } from "@angular/core";
-import { DateUtil, DatePrecision } from "../../../misc/util";
-import { SuiLocalizationService } from "../../../behaviors/localization";
-import { PopupTrigger } from "../../popup";
+import { DateUtil, DatePrecision } from "../../../misc/util/index";
+import { SuiLocalizationService } from "../../../behaviors/localization/index";
+import { PopupTrigger } from "../../popup/index";
 import { SuiDatepickerDirective, SuiDatepickerDirectiveValueAccessor } from "./datepicker.directive";
 import { InternalDateParser, DateParser } from "../classes/date-parser";
 import * as bowser from "bowser";
+
+import "../helpers/is-webview";
+import * as isUAWebView from "is-ua-webview";
+const isWebView = isUAWebView["default"] || isUAWebView;
 
 @Directive({
     selector: "input[suiDatepicker]"
@@ -20,7 +24,8 @@ export class SuiDatepickerInputDirective {
 
     public set useNativeOnMobile(fallback:boolean) {
         this._useNativeOnMobile = fallback;
-        this.fallbackActive = this.useNativeOnMobile && bowser.mobile;
+        const isOnMobile = bowser.mobile || bowser.tablet || isWebView(navigator.userAgent);
+        this.fallbackActive = this.useNativeOnMobile && isOnMobile;
     }
 
     private _fallbackActive:boolean;

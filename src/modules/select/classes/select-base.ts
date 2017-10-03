@@ -1,13 +1,13 @@
 import {
     ViewChild, HostBinding, ElementRef, HostListener, Input, ContentChildren, QueryList,
-    AfterContentInit, TemplateRef, ViewContainerRef, ContentChild, EventEmitter, Output
+    AfterContentInit, TemplateRef, ViewContainerRef, ContentChild, EventEmitter, Output, OnDestroy, Renderer2
 } from "@angular/core";
 import { Subscription } from "rxjs/Subscription";
-import { DropdownService, SuiDropdownMenu } from "../../dropdown";
-import { SearchService, LookupFn, FilterFn } from "../../search";
-import { Util, ITemplateRefContext, HandledEvent, KeyCode } from "../../../misc/util";
-import { ISelectLocaleValues, RecursivePartial, SuiLocalizationService } from "../../../behaviors/localization";
-import { SuiSelectOption, ISelectRenderedOption } from "../components/select-option";
+import { DropdownService, SuiDropdownMenu } from "../../dropdown/index";
+import { SearchService, LookupFn, FilterFn } from "../../search/index";
+import { Util, ITemplateRefContext, HandledEvent, KeyCode, IFocusEvent } from "../../../misc/util/index";
+import { ISelectLocaleValues, RecursivePartial, SuiLocalizationService } from "../../../behaviors/localization/index";
+import { SuiSelectOption } from "../components/select-option";
 import { SuiSelectSearch } from "../directives/select-search";
 
 export interface IOptionContext<T> extends ITemplateRefContext<T> {
@@ -16,7 +16,7 @@ export interface IOptionContext<T> extends ITemplateRefContext<T> {
 
 // We use generic type T to specify the type of the options we are working with,
 // and U to specify the type of the property of the option used as the value.
-export abstract class SuiSelectBase<T, U> implements AfterContentInit {
+export abstract class SuiSelectBase<T, U> implements AfterContentInit, OnDestroy {
     public dropdownService:DropdownService;
     public searchService:SearchService<T, U>;
 
@@ -150,7 +150,7 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
             this.queryUpdateHook();
             this.updateQuery(query);
             // Update the rendered text as query has changed.
-            this._renderedOptions.forEach(ro => ro.formatter = this.configuredFormatter);
+            this._renderedOptions.forEach(ro => this.initialiseRenderedOption(ro));
 
             if (this.searchInput) {
                 this.searchInput.query = query;
@@ -171,7 +171,7 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
         // Helper function to retrieve the label from an item.
         return (obj:T) => {
             const label = Util.Object.readValue<T, string>(obj, this.labelField);
-            if (label) {
+            if (label != undefined) {
                 return label.toString();
             }
             return "";
@@ -225,7 +225,9 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
     @Output("touched")
     public onTouched:EventEmitter<void>;
 
-    constructor(private _element:ElementRef, protected _localizationService:SuiLocalizationService) {
+    private _documentKeyDownListener:() => void;
+
+    constructor(private _element:ElementRef, renderer:Renderer2, protected _localizationService:SuiLocalizationService) {
         this.dropdownService = new DropdownService();
         // We do want an empty query to return all results.
         this.searchService = new SearchService<T, U>(true);
@@ -241,6 +243,7 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
         this.transitionDuration = 200;
 
         this.onTouched = new EventEmitter<void>();
+        this._documentKeyDownListener = renderer.listen("document", "keydown", (e:KeyboardEvent) => this.onDocumentKeyDown(e));
 
         this._selectClasses = true;
     }
@@ -314,13 +317,15 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
         }
     }
 
-    protected initialiseRenderedOption(option:ISelectRenderedOption<T>):void {
+    protected initialiseRenderedOption(option:SuiSelectOption<T>):void {
         option.usesTemplate = !!this.optionTemplate;
         option.formatter = this.configuredFormatter;
 
         if (option.usesTemplate) {
             this.drawTemplate(option.templateSibling, option.value);
         }
+
+        option.changeDetector.markForCheck();
     }
 
     public abstract selectOption(option:T):void;
@@ -365,7 +370,7 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
     }
 
     @HostListener("focusout", ["$event"])
-    private onFocusOut(e:FocusEvent):void {
+    private onFocusOut(e:IFocusEvent):void {
         if (!this._element.nativeElement.contains(e.relatedTarget)) {
             this.dropdownService.setOpenState(false);
             this.onTouched.emit();
@@ -381,7 +386,6 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
         }
     }
 
-    @HostListener("document:keydown", ["$event"])
     public onDocumentKeyDown(e:KeyboardEvent):void {
         if (this._element.nativeElement.contains(e.target) &&
             !this.dropdownService.isOpen &&
@@ -415,5 +419,10 @@ export abstract class SuiSelectBase<T, U> implements AfterContentInit {
             $implicit: value,
             query: this.query
         });
+    }
+
+    public ngOnDestroy():void {
+        this._renderedSubscriptions.forEach(s => s.unsubscribe());
+        this._documentKeyDownListener();
     }
 }

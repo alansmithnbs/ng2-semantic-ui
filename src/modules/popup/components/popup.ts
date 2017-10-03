@@ -1,8 +1,8 @@
-import { Component, ViewChild, ViewContainerRef, ElementRef, EventEmitter, HostListener } from "@angular/core";
-import { PositioningService, IDynamicClasses } from "../../../misc/util";
-import { TransitionController, TransitionDirection, Transition } from "../../transition";
+import { Component, ViewChild, ViewContainerRef, ElementRef, EventEmitter, HostListener, HostBinding } from "@angular/core";
+import { PositioningService, IDynamicClasses } from "../../../misc/util/index";
+import { TransitionController, TransitionDirection, Transition } from "../../transition/index";
 import { IPopup } from "../classes/popup-controller";
-import { PopupConfig } from "../classes/popup-config";
+import { TemplatePopupConfig } from "../classes/popup-template-controller";
 
 @Component({
     selector: "sui-popup",
@@ -59,7 +59,7 @@ import { PopupConfig } from "../classes/popup-config";
 })
 export class SuiPopup implements IPopup {
     // Config settings for this popup.
-    public config:PopupConfig;
+    public config:TemplatePopupConfig<any>;
 
     public transitionController:TransitionController;
     public positioningService:PositioningService;
@@ -67,7 +67,7 @@ export class SuiPopup implements IPopup {
     // Keeps track of whether the popup is open internally.
     private _isOpen:boolean;
     // `setTimeout` timer pointer for cancelling popup close.
-    private _closingTimeout:number;
+    public closingTimeout:number;
 
     // Fires when the popup opens (and the animation is completed).
     public onOpen:EventEmitter<void>;
@@ -122,6 +122,9 @@ export class SuiPopup implements IPopup {
     @ViewChild("templateSibling", { read: ViewContainerRef })
     public templateSibling:ViewContainerRef;
 
+    @HostBinding("attr.tabindex")
+    private _tabindex:number;
+
     constructor(public elementRef:ElementRef) {
         this.transitionController = new TransitionController(false);
 
@@ -129,13 +132,15 @@ export class SuiPopup implements IPopup {
 
         this.onOpen = new EventEmitter<void>();
         this.onClose = new EventEmitter<void>();
+
+        this._tabindex = 0;
     }
 
     public open():void {
         // Only attempt to open if currently closed.
         if (!this.isOpen) {
             // Cancel the closing timer.
-            clearTimeout(this._closingTimeout);
+            clearTimeout(this.closingTimeout);
 
             // Cancel all other transitions, and initiate the opening transition.
             this.transitionController.stopAll();
@@ -144,7 +149,10 @@ export class SuiPopup implements IPopup {
                     // Focus any element with [autofocus] attribute.
                     const autoFocus = this.elementRef.nativeElement.querySelector("[autofocus]") as HTMLElement | null;
                     if (autoFocus) {
-                        autoFocus.focus();
+                        // Autofocus after the browser has had time to process other event handlers.
+                        setTimeout(() => autoFocus.focus(), 10);
+                        // Try to focus again when the modal has opened so that autofocus works in IE11.
+                        setTimeout(() => autoFocus.focus(), this.config.transitionDuration);
                     }
                 }));
 
@@ -175,18 +183,13 @@ export class SuiPopup implements IPopup {
                 new Transition(this.config.transition, this.config.transitionDuration, TransitionDirection.Out));
 
             // Cancel the closing timer.
-            clearTimeout(this._closingTimeout);
+            clearTimeout(this.closingTimeout);
             // Start the closing timer, that fires the `onClose` event after the transition duration number of milliseconds.
-            this._closingTimeout = window.setTimeout(() => this.onClose.emit(), this.config.transitionDuration);
+            this.closingTimeout = window.setTimeout(() => this.onClose.emit(), this.config.transitionDuration);
 
             // Finally, set the popup to be closed.
             this._isOpen = false;
         }
-    }
-
-    @HostListener("mousedown", ["$event"])
-    public onMouseDown(e:MouseEvent):void {
-        e.preventDefault();
     }
 
     @HostListener("click", ["$event"])

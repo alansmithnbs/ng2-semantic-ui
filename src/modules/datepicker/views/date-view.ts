@@ -1,5 +1,5 @@
-import { Component } from "@angular/core";
-import { DateUtil, DatePrecision } from "../../../misc/util";
+import { Component, Renderer2 } from "@angular/core";
+import { DateUtil, DatePrecision } from "../../../misc/util/index";
 import { CalendarItem } from "../directives/calendar-item";
 import { CalendarView, CalendarViewType } from "./calendar-view";
 import { CalendarRangeService } from "../services/calendar-range.service";
@@ -15,7 +15,7 @@ export class CalendarRangeDateService extends CalendarRangeService {
     public configureItem(item:CalendarItem, baseDate:Date):void {
         item.humanReadable = item.date.getDate().toString();
         item.isOutsideRange = item.date.getMonth() !== baseDate.getMonth();
-        item.isSelectable = item.isDisabled || item.isOutsideRange;
+        item.isSelectable = item.isDisabled;
     }
 }
 
@@ -26,13 +26,9 @@ export class CalendarRangeDateService extends CalendarRangeService {
 <thead>
     <tr>
         <th colspan="7">
-            <span class="link" (click)="zoomOut()">{{ date }}</span>
-            <span class="prev link" [class.disabled]="!ranges.canMovePrevious" (click)="ranges.movePrevious()">
-                <i class="chevron left icon"></i>
-            </span>
-            <span class="next link" [class.disabled]="!ranges.canMoveNext" (click)="ranges.moveNext()">
-                <i class="chevron right icon"></i>
-            </span>
+            <sui-calendar-view-title [ranges]="ranges" (zoomOut)="zoomOut()">
+                {{ date }}
+            </sui-calendar-view-title>
         </th>
     </tr>
     <tr>
@@ -58,10 +54,10 @@ export class SuiCalendarDateView extends CalendarView {
     }
 
     public get date():string {
-        return new DateParser("MMMM YYYY", this.service.localeValues).format(this.currentDate);
+        return new DateParser(this.service.localeValues.formats.month, this.service.localeValues).format(this.currentDate);
     }
 
-    constructor() {
-        super(CalendarViewType.Date, new CalendarRangeDateService(DatePrecision.Month, 6, 7));
+    constructor(renderer:Renderer2) {
+        super(renderer, CalendarViewType.Date, new CalendarRangeDateService(DatePrecision.Month, 6, 7));
     }
 }

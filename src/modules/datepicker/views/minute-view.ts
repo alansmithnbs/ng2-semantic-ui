@@ -1,5 +1,5 @@
-import { Component } from "@angular/core";
-import { Util, DateUtil, DatePrecision } from "../../../misc/util";
+import { Component, Renderer2 } from "@angular/core";
+import { Util, DateUtil, DatePrecision } from "../../../misc/util/index";
 import { CalendarView, CalendarViewType } from "./calendar-view";
 import { CalendarItem } from "../directives/calendar-item";
 import { CalendarMode } from "../services/calendar.service";
@@ -18,12 +18,8 @@ export class CalendarRangeMinuteService extends CalendarRangeService {
     }
 
     public configureItem(item:CalendarItem, baseDate:Date):void {
-        const hs = Util.String.padLeft(item.date.getHours().toString(), 2, "0");
-        const ms = Util.String.padLeft(item.date.getMinutes().toString(), 2, "0");
-
-        item.humanReadable = `${hs}:${ms}`;
+        item.humanReadable = new DateParser(this.service.localeValues.formats.time, this.service.localeValues).format(item.date);
         item.isOutsideRange = false;
-        item.isToday = false;
     }
 }
 
@@ -34,13 +30,9 @@ export class CalendarRangeMinuteService extends CalendarRangeService {
 <thead>
     <tr>
         <th colspan="4">
-            <span class="link" (click)="zoomOut()">{{ date }}</span>
-            <span class="prev link" [class.disabled]="!ranges.canMovePrevious" (click)="ranges.movePrevious()">
-                <i class="chevron left icon"></i>
-            </span>
-            <span class="next link" [class.disabled]="!ranges.canMoveNext" (click)="ranges.moveNext()">
-                <i class="chevron right icon"></i>
-            </span>
+            <sui-calendar-view-title [ranges]="ranges" (zoomOut)="zoomOut()">
+                {{ date }}
+            </sui-calendar-view-title>
         </th>
     </tr>
 </thead>
@@ -58,18 +50,18 @@ export class CalendarRangeMinuteService extends CalendarRangeService {
 })
 export class SuiCalendarMinuteView extends CalendarView {
     public get date():string {
-        const [time, date] = new DateParser("HH:00|MMMM D, YYYY", this.service.localeValues)
-            .format(this.currentDate)
-            .split("|");
-
         if (this.service.config.mode !== CalendarMode.TimeOnly) {
-            return `${date} ${time}`;
+            // Set minutes and seconds to 0
+            const dateTimeFormat:string = this.service.localeValues.formats.datetime.replace(/[ms]/g, "0");
+            return new DateParser(dateTimeFormat, this.service.localeValues).format(this.currentDate);
+        } else {
+            // Set minutes and seconds to 0
+            const timeFormat:string = this.service.localeValues.formats.time.replace(/[ms]/g, "0");
+            return new DateParser(timeFormat, this.service.localeValues).format(this.currentDate);
         }
-
-        return time;
     }
 
-    constructor() {
-        super(CalendarViewType.Minute, new CalendarRangeMinuteService(DatePrecision.Hour, 4, 3));
+    constructor(renderer:Renderer2) {
+        super(renderer, CalendarViewType.Minute, new CalendarRangeMinuteService(DatePrecision.Hour, 4, 3));
     }
 }

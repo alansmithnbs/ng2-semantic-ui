@@ -1,7 +1,8 @@
-import { Component, HostBinding, ElementRef, EventEmitter, Output, Input, Directive } from "@angular/core";
-import { ICustomValueAccessorHost, KeyCode, customValueAccessorFactory, CustomValueAccessor } from "../../../misc/util";
-import { SuiLocalizationService } from "../../../behaviors/localization";
+import { Component, HostBinding, ElementRef, EventEmitter, Output, Input, Directive, Renderer2 } from "@angular/core";
+import { ICustomValueAccessorHost, KeyCode, customValueAccessorFactory, CustomValueAccessor } from "../../../misc/util/index";
+import { SuiLocalizationService } from "../../../behaviors/localization/index";
 import { SuiSelectBase } from "../classes/select-base";
+import { SuiSelectOption } from "./select-option";
 
 @Component({
     selector: "sui-multi-select",
@@ -9,20 +10,33 @@ import { SuiSelectBase } from "../classes/select-base";
 <!-- Dropdown icon -->
 <i class="{{ icon }} icon" (click)="onCaretClick($event)"></i>
 
+<ng-container *ngIf="hasLabels">
 <!-- Multi-select labels -->
-<sui-multi-select-label *ngFor="let selected of selectedOptions;"
-                        [value]="selected"
-                        [query]="query"
-                        [formatter]="configuredFormatter"
-                        [template]="optionTemplate"
-                        (deselected)="deselectOption($event)"></sui-multi-select-label>
+    <sui-multi-select-label *ngFor="let selected of selectedOptions;"
+                            [value]="selected"
+                            [query]="query"
+                            [formatter]="configuredFormatter"
+                            [template]="optionTemplate"
+                            (deselected)="deselectOption($event)"></sui-multi-select-label>
+</ng-container>
+
 <!-- Query input -->
 <input suiSelectSearch
        type="text"
        [hidden]="!isSearchable || isSearchExternal">
 
-<!-- Placeholder text -->
-<div class="default text" [class.filtered]="!!query && !isSearchExternal">{{ placeholder }}</div>
+<!-- Helper text -->
+<div class="text"
+     [class.default]="hasLabels"
+     [class.filtered]="!!query && !isSearchExternal">
+    
+    <!-- Placeholder text -->
+    <ng-container *ngIf="hasLabels; else selectedBlock">{{ placeholder }}</ng-container>
+    
+    <!-- Summary shown when labels are hidden -->
+    <ng-template #selectedBlock> {{ selectedMessage }}</ng-template>
+</div>
+
 <!-- Select dropdown menu -->
 <div class="menu"
      suiDropdownMenu
@@ -56,13 +70,31 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
             // If we have reached the maximum number of selections, then empty the results completely.
             return [];
         }
-        // Returns the search results \ selected options.
-        return this.searchService.results
-            .filter(r => !this.selectedOptions.find(o => r === o));
+
+        const searchResults:T[] = this.searchService.results;
+
+        if (!this.hasLabels) {
+            return searchResults;
+        } else {
+            // Returns the search results \ selected options.
+            return searchResults
+                .filter(r => this.selectedOptions.find(o => r === o) == undefined);
+        }
     }
 
     public get availableOptions():T[] {
         return this.filteredOptions;
+    }
+
+    private _hasLabels:boolean;
+
+    @Input()
+    public get hasLabels():boolean {
+        return this._hasLabels;
+    }
+
+    public set hasLabels(hasLabels:boolean) {
+        this._hasLabels = hasLabels;
     }
 
     private _placeholder:string;
@@ -93,24 +125,36 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
             [["max", this.maxSelected.toString()]]);
     }
 
+    public get selectedMessage():string {
+        return this._localizationService.interpolate(
+            this.localeValues.multi.selectedMessage,
+            [["count", this.selectedOptions.length.toString()]]);
+    }
+
     @HostBinding("class.multiple")
     private _multiSelectClasses:boolean;
 
-    constructor(element:ElementRef, localizationService:SuiLocalizationService) {
-        super(element, localizationService);
+    constructor(element:ElementRef, renderer:Renderer2, localizationService:SuiLocalizationService) {
+        super(element, renderer, localizationService);
 
         this.selectedOptions = [];
         this.selectedOptionsChange = new EventEmitter<U[]>();
 
+        this.hasLabels = true;
         this._multiSelectClasses = true;
     }
 
     protected optionsUpdateHook():void {
+        if (!this._writtenOptions && this.selectedOptions.length > 0) {
+            // We need to check the options still exist.
+            this.writeValue(this.selectedOptions.map(o => this.valueGetter(o)));
+        }
+
         if (this._writtenOptions && this.searchService.options.length > 0) {
             // If there were values written by ngModel before the options had been loaded, this runs to fix it.
             this.selectedOptions = this._writtenOptions
                 // non-null assertion added here because Typescript doesn't recognise the non-null filter.
-                .map(v => this.searchService.options.find(o => v === this.valueGetter(o))!)
+                .map(v => this.findOption(this.searchService.options, v)!)
                 .filter(v => v != undefined);
 
             if (this.selectedOptions.length === this._writtenOptions.length) {
@@ -119,7 +163,18 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
         }
     }
 
+    protected initialiseRenderedOption(option:SuiSelectOption<T>):void {
+        super.initialiseRenderedOption(option);
+
+        // Boldens the item so it appears selected in the dropdown.
+        option.isActive = !this.hasLabels && this.selectedOptions.indexOf(option.value) !== -1;
+    }
+
     public selectOption(option:T):void {
+        if (this.selectedOptions.indexOf(option) !== -1) {
+            this.deselectOption(option);
+            return;
+        }
         this.selectedOptions.push(option);
         this.selectedOptionsChange.emit(this.selectedOptions.map(o => this.valueGetter(o)));
 
@@ -127,6 +182,10 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
 
         // Automatically refocus the search input for better keyboard accessibility.
         this.focus();
+
+        if (!this.hasLabels) {
+            this.onAvailableOptionsRendered();
+        }
     }
 
     public writeValue(values:U[]):void {
@@ -136,7 +195,7 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
                 this.selectedOptions = values
                     // non-null assertion added here because Typescript doesn't recognise the non-null filter.
                     .map(v => this.findOption(this.searchService.options, v)!)
-                    .filter(v => !!v);
+                    .filter(v => v != undefined);
             }
             if (values.length > 0 && this.selectedOptions.length === 0) {
                 if (this.valueField && this.searchService.hasItemLookup) {
@@ -152,6 +211,8 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
             if (values.length === 0) {
                 this.selectedOptions = [];
             }
+        } else {
+            this.selectedOptions = [];
         }
     }
 
@@ -162,6 +223,10 @@ export class SuiMultiSelect<T, U> extends SuiSelectBase<T, U> implements ICustom
 
         // Automatically refocus the search input for better keyboard accessibility.
         this.focus();
+
+        if (!this.hasLabels) {
+            this.onAvailableOptionsRendered();
+        }
     }
 
     public onQueryInputKeydown(event:KeyboardEvent):void {

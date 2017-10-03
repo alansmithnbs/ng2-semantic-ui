@@ -17,14 +17,14 @@ const es:IPartialLocaleValues = {
             "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
         ],
         weekdaysShort: [
-            "Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sáb"
+            "Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"
         ],
         weekdaysNarrow: [
             "D", "L", "M", "M", "J", "V", "S"
         ],
         formats: {
             time: "HH:mm",
-            datetime: "D MMMM [de] YYYY HH:mm",
+            datetime: "D [de] MMMM [de] YYYY HH:mm",
             date: "D [de] MMMM [de] YYYY",
             month: "MMMM [de] YYYY",
             year: "YYYY"
@@ -45,7 +45,8 @@ const es:IPartialLocaleValues = {
         },
         multi: {
             placeholder: "Seleccione...",
-            maxSelectedMessage: "Puede elegir hasta #{max}"
+            maxSelectedMessage: "Puede elegir hasta #{max}",
+            selectedMessage: "Seleccionados #{count}"
         }
     }
 };

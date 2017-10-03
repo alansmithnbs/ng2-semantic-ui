@@ -2,8 +2,8 @@ import {
     Component, Input, OnInit, ViewChild, ElementRef, Renderer2,
     EventEmitter, Output, HostListener, ViewContainerRef, AfterViewInit
 } from "@angular/core";
-import { Util, IDynamicClasses, KeyCode, SuiComponentFactory } from "../../../misc/util";
-import { TransitionController, Transition, TransitionDirection } from "../../transition";
+import { Util, IDynamicClasses, KeyCode, SuiComponentFactory } from "../../../misc/util/index";
+import { TransitionController, Transition, TransitionDirection } from "../../transition/index";
 import { ModalControls, ModalResult } from "../classes/modal-controls";
 import { ModalConfig, ModalSize } from "../classes/modal-config";
 
@@ -16,28 +16,35 @@ import { ModalConfig, ModalSize } from "../classes/modal-config";
             [(isDimmed)]="dimBackground"
             [isClickable]="false"
             [transitionDuration]="transitionDuration"
-            (click)="close()"></sui-dimmer>
+            [wrapContent]="false"
+            (click)="close()">
 
-<!-- Modal component, with transition component attached -->
-<div class="ui modal"
-     [suiTransition]="transitionController"
-     [class.active]="transitionController?.isVisible"
-     [class.fullscreen]="isFullScreen"
-     [class.basic]="isBasic"
-     [class.scroll]="mustScroll"
-     [class.inverted]="isInverted"
-     [ngClass]="dynamicClasses"
-     #modal>
+    <!-- Modal component, with transition component attached -->
+    <div class="ui modal"
+         [suiTransition]="transitionController"
+         [class.active]="transitionController?.isVisible"
+         [class.fullscreen]="isFullScreen"
+         [class.basic]="isBasic"
+         [class.scroll]="mustScroll"
+         [class.inverted]="isInverted"
+         [ngClass]="dynamicClasses"
+         (click)="onClick($event)"
+         #modal>
 
-    <!-- Configurable close icon -->
-    <i class="close icon" *ngIf="isClosable" (click)="close()"></i>
-    <!-- <ng-content> so that <sui-modal> can be used as a normal component. -->
-    <ng-content></ng-content>
-    <!-- @ViewChild reference so we can insert elements beside this div. -->
-    <div #templateSibling></div>
-</div>
+        <!-- Configurable close icon -->
+        <i class="close icon" *ngIf="isClosable" (click)="close()"></i>
+        <!-- <ng-content> so that <sui-modal> can be used as a normal component. -->
+        <ng-content></ng-content>
+        <!-- @ViewChild reference so we can insert elements beside this div. -->
+        <div #templateSibling></div>
+    </div>
+</sui-dimmer>
 `,
     styles: [`
+.ui.dimmer {
+    overflow-y: auto;
+}
+
 /* avoid .scrolling as Semantic UI adds unwanted styles. */
 .scroll {
     position: absolute !important;
@@ -151,6 +158,9 @@ export class SuiModal<T, U> implements OnInit, AfterViewInit {
     @ViewChild("templateSibling", { read: ViewContainerRef })
     public templateSibling:ViewContainerRef;
 
+    // Parent element of modal before relocation to document body.
+    private _originalContainer?:Element;
+
     public get dynamicClasses():IDynamicClasses {
         const classes:IDynamicClasses = {};
         if (this.size) {
@@ -188,6 +198,7 @@ export class SuiModal<T, U> implements OnInit, AfterViewInit {
 
     public ngAfterViewInit():void {
         // Move the modal to the document body to ensure correct scrolling.
+        this._originalContainer = this._element.nativeElement.parentNode;
         document.querySelector("body")!.appendChild(this._element.nativeElement);
         // Remove the #templateSibling element from the DOM to fix bottom border styles.
         const templateElement = this.templateSibling.element.nativeElement as Element;
@@ -205,7 +216,10 @@ export class SuiModal<T, U> implements OnInit, AfterViewInit {
         // Focus any element with [autofocus] attribute.
         const autoFocus = element.querySelector("[autofocus]") as HTMLElement | null;
         if (autoFocus) {
-            autoFocus.focus();
+            // Autofocus after the browser has had time to process other event handlers.
+            setTimeout(() => autoFocus.focus(), 10);
+            // Try to focus again when the modal has opened so that autofocus works in IE11.
+            setTimeout(() => autoFocus.focus(), this.transitionDuration);
         }
     }
 
@@ -236,7 +250,10 @@ export class SuiModal<T, U> implements OnInit, AfterViewInit {
             this.transitionController.stopAll();
             this.transitionController.animate(
                 new Transition(this.transition, this.transitionDuration, TransitionDirection.Out, () => {
-                    // When done, emit a dismiss event, and fire the callback.
+                    // When done, move the modal back to its original location, emit a dismiss event, and fire the callback.
+                    if (this._originalContainer) {
+                        this._originalContainer.appendChild(this._element.nativeElement);
+                    }
                     this.onDismiss.emit();
                     callback();
                 }));
@@ -266,8 +283,14 @@ export class SuiModal<T, U> implements OnInit, AfterViewInit {
         }
     }
 
+    public onClick(e:MouseEvent):void {
+        // Makes sense here, as the modal shouldn't be attached to any DOM element.
+        e.stopPropagation();
+    }
+
+    // Document listener is fine here because nobody will enough modals open.
     @HostListener("document:keyup", ["$event"])
-    public onDocumentKeyup(e:KeyboardEvent):void {
+    public onDocumentKeyUp(e:KeyboardEvent):void {
         if (e.keyCode === KeyCode.Escape) {
             // Close automatically covers case of `!isClosable`, so check not needed.
             this.close();

@@ -2,13 +2,13 @@ import {
     Component, Input, Output, HostBinding, HostListener, EventEmitter, Renderer2,
     ElementRef, ChangeDetectorRef
 } from "@angular/core";
-import { TransitionController, SuiTransition, TransitionDirection, Transition } from "../../transition";
+import { TransitionController, SuiTransition, TransitionDirection, Transition } from "../../transition/index";
 
 @Component({
     selector: "sui-dimmer",
     template: `
-<div class="content">
-    <div class="center">
+<div [class.content]="wrapContent">
+    <div [class.center]="wrapContent">
         <ng-content></ng-content>
     </div>
 </div>
@@ -42,16 +42,15 @@ export class SuiDimmer extends SuiTransition {
             this._transitionController = new TransitionController(isDimmed, "block");
 
             this.setTransitionController(this._transitionController);
-        }
 
-        if (this._isDimmed !== isDimmed) {
+            this._isDimmed = isDimmed;
+        } else if (this._isDimmed !== isDimmed) {
+
             this._isDimmed = isDimmed;
 
-            if (this._transitionController.isVisible !== isDimmed) {
-                this._transitionController.stopAll();
-                this._transitionController.animate(
-                    new Transition("fade", this.transitionDuration, isDimmed ? TransitionDirection.In : TransitionDirection.Out));
-            }
+            this._transitionController.stopAll();
+            this._transitionController.animate(
+                new Transition("fade", this.transitionDuration, isDimmed ? TransitionDirection.In : TransitionDirection.Out));
         }
     }
 
@@ -67,12 +66,18 @@ export class SuiDimmer extends SuiTransition {
     @Input()
     public transitionDuration:number;
 
+    /* Internal for now */
+    @Input()
+    public wrapContent:boolean;
+
     constructor(renderer:Renderer2, element:ElementRef, changeDetector:ChangeDetectorRef) {
         super(renderer, element, changeDetector);
 
         this._isDimmed = false;
         this.isDimmedChange = new EventEmitter<boolean>();
         this.isClickable = true;
+
+        this.wrapContent = true;
 
         this._dimmerClasses = true;
     }

@@ -1,6 +1,6 @@
-import { ComponentRef, ElementRef, HostListener, OnDestroy } from "@angular/core";
-import { SuiComponentFactory } from "../../../misc/util";
-import { PopupConfig, PopupTrigger } from "./popup-config";
+import { ComponentRef, ElementRef, HostListener, OnDestroy, Renderer2 } from "@angular/core";
+import { SuiComponentFactory } from "../../../misc/util/index";
+import { PopupConfig, PopupTrigger, IPopupConfig } from "./popup-config";
 import { SuiPopup } from "../components/popup";
 import { IPopupLifecycle } from "./popup-lifecycle";
 
@@ -10,7 +10,7 @@ export interface IPopup {
     toggle():void;
 }
 
-export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLifecycle {
+export abstract class SuiPopupController implements IPopup, OnDestroy {
     // Stores reference to generated popup component.
     private _componentRef:ComponentRef<SuiPopup>;
 
@@ -23,7 +23,11 @@ export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLif
     // `setTimeout` timer pointer for delayed popup open.
     private _openingTimeout:number;
 
-    constructor(protected _element:ElementRef,
+    // Function to remove the document click handler.
+    private _documentListener:() => void;
+
+    constructor(renderer:Renderer2,
+                protected _element:ElementRef,
                 protected _componentFactory:SuiComponentFactory,
                 config:PopupConfig) {
 
@@ -34,10 +38,15 @@ export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLif
         this.popup.config = config;
 
         // When the popup is closed (onClose fires on animation complete),
-        this.popup.onClose.subscribe(() => {
-            this._componentRef.instance.positioningService.destroy();
-            this._componentFactory.detachFromApplication(this._componentRef);
-        });
+        this.popup.onClose.subscribe(() => this.cleanup());
+
+        this._documentListener = renderer.listen("document", "click", (e:MouseEvent) => this.onDocumentClick(e));
+    }
+
+    public configure(config?:IPopupConfig):void {
+        if (config) {
+            Object.assign(this.popup.config, config);
+        }
     }
 
     public openDelayed():void {
@@ -49,17 +58,10 @@ export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLif
     }
 
     public open():void {
-        // If there is a template, inject it into the view.
-        if (this.popup.config.template) {
-            this.popup.templateSibling.clear();
-
-            this._componentFactory.createView(this.popup.templateSibling, this.popup.config.template, {
-                $implicit: this.popup
-            });
-        }
+        // Attach the generated component to the current application.
+        this._componentFactory.attachToApplication(this._componentRef);
 
         // Move the generated element to the body to avoid any positioning issues.
-        this._componentFactory.attachToApplication(this._componentRef);
         this._componentFactory.moveToDocumentBody(this._componentRef);
 
         // Attach a reference to the anchor element. We do it here because IE11 loves to complain.
@@ -139,7 +141,6 @@ export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLif
         }
     }
 
-    @HostListener("document:click", ["$event"])
     public onDocumentClick(e:MouseEvent):void {
         // If the popup trigger is outside click,
         if (this._componentRef && this.popup.config.trigger === PopupTrigger.OutsideClick) {
@@ -158,14 +159,29 @@ export abstract class SuiPopupController implements IPopup, OnDestroy, IPopupLif
         }
     }
 
-    @HostListener("focusout")
-    private onFocusOut():void {
-        if (this.popup.config.trigger === PopupTrigger.Focus) {
+    @HostListener("focusout", ["$event"])
+    private onFocusOut(e:any):void {
+        if (!this._element.nativeElement.contains(e.relatedTarget) &&
+            !this.popup.elementRef.nativeElement.contains(e.relatedTarget) &&
+            this.popup.config.trigger === PopupTrigger.Focus) {
+
             this.close();
         }
     }
 
+    protected cleanup():void {
+        clearTimeout(this._openingTimeout);
+
+        if (this._componentRef.instance && this._componentRef.instance.positioningService) {
+            this._componentRef.instance.positioningService.destroy();
+        }
+
+        this._componentFactory.detachFromApplication(this._componentRef);
+    }
+
     public ngOnDestroy():void {
-        this._componentRef.destroy();
+        this.cleanup();
+
+        this._documentListener();
     }
 }

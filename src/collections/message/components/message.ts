@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { TransitionController, Transition, TransitionDirection } from "../../../modules/transition";
+import { TransitionController, Transition, TransitionDirection } from "../../../modules/transition/index";
 
 export interface IMessage {
     dismiss():void;
@@ -12,7 +12,13 @@ export interface IMessage {
     <i class="close icon" *ngIf="isDismissable" (click)="dismiss()"></i>
     <ng-content></ng-content>
 </div>
-`
+`,
+    styles: [`
+/* Fix for CSS Bug */
+.ui.icon.visible.message {
+    display: flex !important;
+}
+`]
 })
 export class SuiMessage implements IMessage {
     @Input()

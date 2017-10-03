@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { ApiDefinition } from "../../../components/api/api.component";
-import { DatepickerMode } from "../../../../../../src/public";
+import { DatepickerMode } from "ng2-semantic-ui";
 
 const exampleStandardTemplate = `
 <div class="ui form">
@@ -93,6 +93,12 @@ export class DatepickerPage {
                     description: "Specifies the mode for the datepicker. Options are: <code>datetime</code>, " +
                                  "<code>date</code>, <code>time</code>, <code>month</code> & <code>year</code>.",
                     defaultValue: "datetime"
+                },
+                {
+                    name: "pickerInitialDate",
+                    type: "Date",
+                    description: "Sets the intial date to display when no date is selected.",
+                    defaultValue: "new Date()"
                 },
                 {
                     name: "pickerMaxDate",

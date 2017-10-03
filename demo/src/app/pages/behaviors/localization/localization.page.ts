@@ -1,6 +1,6 @@
 import { Component, OnDestroy } from "@angular/core";
-import { SuiLocalizationService } from "../../../../../../src/public";
-import locales from "../../../../../../src/behaviors/localization/locales";
+import { SuiLocalizationService } from "ng2-semantic-ui";
+import locales from "ng2-semantic-ui/locales";
 
 const exampleTemplate = `
 <div class="ui segments">
@@ -46,6 +46,10 @@ const supportedLanguages:ISupportedLanguage[] = [
         name: "English",
         children: [
             {
+                name: "Australian",
+                code: "en-AU"
+            },
+            {
                 name: "UK",
                 code: "en-GB",
                 default: true
@@ -75,6 +79,22 @@ const supportedLanguages:ISupportedLanguage[] = [
     {
         name: "German",
         code: "de"
+    },
+    {
+        name: "Russian",
+        code: "ru"
+    },
+    {
+        name: "Hebrew",
+        code: "he"
+    },
+    {
+        name: "Dutch",
+        code: "nl"
+    },
+    {
+        name: "Georgian",
+        code: "ge"
     }
 ];
 
@@ -138,6 +158,9 @@ interface ILocaleValues {
         weekdays:string[], // Full day names
         weekdaysShort:string[], // Short day names (3 letters)
         weekdaysNarrow:string[], // Narrow day names (1/2 letters)
+        timesOfDay:string[]; // Full time of day names (2 values only)
+        timesOfDayUppercase:string[]; // Short uppercase time of day names (2 values only)
+        timesOfDayLowercase:string[]; // Short lowercase time of day names (2 values only)
         formats: {
             time:string, // Date display format for 'time' mode
             datetime:string, // Display format for 'datetime' mode

@@ -1,5 +1,5 @@
-import { Component } from "@angular/core";
-import { Util, DatePrecision } from "../../../misc/util";
+import { Component, Renderer2 } from "@angular/core";
+import { DatePrecision } from "../../../misc/util/index";
 import { CalendarView, CalendarViewType } from "./calendar-view";
 import { CalendarItem } from "../directives/calendar-item";
 import { CalendarRangeService } from "../services/calendar-range.service";
@@ -7,9 +7,10 @@ import { DateParser } from "../classes/date-parser";
 
 export class CalendarRangeHourService extends CalendarRangeService {
     public configureItem(item:CalendarItem, baseDate:Date):void {
-        item.humanReadable = `${Util.String.padLeft(item.date.getHours().toString(), 2, "0")}:00`;
+        // Set minutes and seconds to 0
+        const customFormat:string = this.service.localeValues.formats.time.replace(/[ms]/g, "0");
+        item.humanReadable = new DateParser(customFormat, this.service.localeValues).format(item.date);
         item.isOutsideRange = false;
-        item.isToday = false;
     }
 }
 
@@ -20,13 +21,9 @@ export class CalendarRangeHourService extends CalendarRangeService {
 <thead *ngIf="service.config.mode != 1">
     <tr>
         <th colspan="4">
-            <span class="link" (click)="zoomOut()">{{ date }}</span>
-            <span class="prev link" [class.disabled]="!ranges.canMovePrevious" (click)="ranges.movePrevious()">
-                <i class="chevron left icon"></i>
-            </span>
-            <span class="next link" [class.disabled]="!ranges.canMoveNext" (click)="ranges.moveNext()">
-                <i class="chevron right icon"></i>
-            </span>
+            <sui-calendar-view-title [ranges]="ranges" (zoomOut)="zoomOut()">
+                {{ date }}
+            </sui-calendar-view-title>
         </th>
     </tr>
 </thead>
@@ -43,11 +40,12 @@ export class CalendarRangeHourService extends CalendarRangeService {
 `
 })
 export class SuiCalendarHourView extends CalendarView {
+
     public get date():string {
-        return new DateParser("MMMM D, YYYY", this.service.localeValues).format(this.currentDate);
+        return new DateParser(this.service.localeValues.formats.date, this.service.localeValues).format(this.currentDate);
     }
 
-    constructor() {
-        super(CalendarViewType.Hour, new CalendarRangeHourService(DatePrecision.Date, 6, 4));
+    constructor(renderer:Renderer2) {
+        super(renderer, CalendarViewType.Hour, new CalendarRangeHourService(DatePrecision.Date, 6, 4));
     }
 }

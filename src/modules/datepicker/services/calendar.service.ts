@@ -1,6 +1,6 @@
 import { EventEmitter } from "@angular/core";
-import { IDatepickerLocaleValues } from "../../../behaviors/localization";
-import { DateUtil } from "../../../misc/util";
+import { IDatepickerLocaleValues } from "../../../behaviors/localization/index";
+import { DateUtil } from "../../../misc/util/index";
 import { CalendarViewType } from "../views/calendar-view";
 import { CalendarConfig } from "../classes/calendar-config";
 
@@ -88,6 +88,8 @@ export class CalendarService {
     constructor(config:CalendarConfig, public localeValues:IDatepickerLocaleValues) {
         this.config = config;
 
+        this.currentDate = new Date();
+
         this.firstDayOfWeek = this.localeValues.firstDayOfWeek;
 
         this.onDateChange = new EventEmitter<Date>();
@@ -101,15 +103,15 @@ export class CalendarService {
         this.currentView = this.config.mappings.finalView;
 
         if (!this._selectedDate) {
-            let today = new Date().getTime();
+            let current = this.currentDate.getTime();
             if (this._minDate) {
-                today = Math.max(today, this._minDate.getTime());
+                current = Math.max(current, this._minDate.getTime());
             }
             if (this._maxDate) {
-                today = Math.min(today, this._maxDate.getTime());
+                current = Math.min(current, this._maxDate.getTime());
             }
 
-            this.currentDate = new Date(today);
+            this.currentDate = new Date(current);
             this.config.updateBounds(this.currentDate);
 
             this.currentView = this.config.mappings.initialView;

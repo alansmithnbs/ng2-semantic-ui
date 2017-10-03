@@ -1,6 +1,6 @@
-import { Component, Input, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { ApiDefinition } from "../../../components/api/api.component";
-import { SuiPopupConfig } from "../../../../../../src/public";
+import { SuiPopupConfig } from "ng2-semantic-ui";
 
 const exampleStandardTemplate = `
 <button class="ui green icon button" suiPopup popupHeader="Example" popupText="This is an example popup">
@@ -51,11 +51,6 @@ export class PopupPage {
                     description: "Sets the title of the popup."
                 },
                 {
-                    name: "popupTemplate",
-                    type: "TemplateRef",
-                    description: "Sets the template to use when rendering the popup."
-                },
-                {
                     name: "popupPlacement",
                     type: "PopupPlacement",
                     description: "Sets the placement of the popup relative to the anchor.",
@@ -79,6 +74,16 @@ export class PopupPage {
                     type: "number",
                     description: "Sets the time delay in milliseconds before the popup opens after triggered.",
                     defaultValue: "0"
+                },
+                {
+                    name: "popupTemplate",
+                    type: "TemplateRef<ITemplatePopupContext<T>>",
+                    description: "Sets the template to use when rendering the popup."
+                },
+                {
+                    name: "popupTemplateContext",
+                    type: "T",
+                    description: "Sets the context object available to the popup template."
                 },
                 {
                     name: "popupBasic",
@@ -168,33 +173,22 @@ export class MyComponent {
 
 @Component({
     selector: "example-popup-standard",
-    template: exampleStandardTemplate
+    template: exampleStandardTemplate,
+    providers: [SuiPopupConfig]
 })
-export class PopupExampleStandard implements OnInit {
-    // We only need to do this once.
-    private _config:SuiPopupConfig;
-
-    constructor(public popupConfig:SuiPopupConfig) {
-        this._config = new SuiPopupConfig();
-
-        Object.assign(this._config, popupConfig);
-        Object.assign(this.popupConfig, new SuiPopupConfig());
-    }
-
-    public ngOnInit():void {
-        Object.assign(this.popupConfig, this._config);
-    }
-}
+export class PopupExampleStandard {}
 
 @Component({
     selector: "example-popup-template",
-    template: exampleTemplateTemplate
+    template: exampleTemplateTemplate,
+    providers: [SuiPopupConfig]
 })
 export class PopupExampleTemplate {}
 
 @Component({
     selector: "example-popup-placement",
-    template: examplePlacementTemplate
+    template: examplePlacementTemplate,
+    providers: [SuiPopupConfig]
 })
 export class PopupExamplePlacement {
     @Input()

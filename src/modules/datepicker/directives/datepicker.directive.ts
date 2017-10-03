@@ -1,4 +1,3 @@
-
 import {
     Directive, ElementRef, Renderer2, EventEmitter, Output, Input,
     HostListener, OnChanges, SimpleChanges
@@ -7,9 +6,9 @@ import { AbstractControl, ValidationErrors } from "@angular/forms";
 import {
     ICustomValueAccessorHost, customValueAccessorFactory, CustomValueAccessor,
     ICustomValidatorHost, customValidatorFactory, CustomValidator, PositioningPlacement, SuiComponentFactory, KeyCode
-} from "../../../misc/util";
-import { IDatepickerLocaleValues, RecursivePartial, SuiLocalizationService } from "../../../behaviors/localization";
-import { SuiPopupComponentController, PopupAfterOpen, PopupConfig, PopupTrigger } from "../../popup";
+} from "../../../misc/util/index";
+import { IDatepickerLocaleValues, RecursivePartial, SuiLocalizationService } from "../../../behaviors/localization/index";
+import { SuiPopupComponentController, PopupAfterOpen, PopupConfig, PopupTrigger } from "../../popup/index";
 import { SuiDatepicker, DatepickerMode } from "../components/datepicker";
 import { CalendarConfig, YearConfig, MonthConfig, DatetimeConfig, TimeConfig, DateConfig } from "../classes/calendar-config";
 
@@ -63,6 +62,9 @@ export class SuiDatepickerDirective
         this.writeValue(this.selectedDate);
     }
 
+    @Input("pickerInitialDate")
+    public initialDate?:Date;
+
     @Input("pickerMaxDate")
     public maxDate?:Date;
 
@@ -102,12 +104,12 @@ export class SuiDatepickerDirective
     @Output("pickerValidatorChange")
     public onValidatorChange:EventEmitter<void>;
 
-    constructor(element:ElementRef,
-                public renderer:Renderer2,
+    constructor(public renderer:Renderer2,
+                element:ElementRef,
                 componentFactory:SuiComponentFactory,
                 public localizationService:SuiLocalizationService) {
 
-        super(element, componentFactory, SuiDatepicker, new PopupConfig({
+        super(renderer, element, componentFactory, SuiDatepicker, new PopupConfig({
             trigger: PopupTrigger.Focus,
             placement: PositioningPlacement.BottomLeft,
             transition: "scale",
@@ -131,6 +133,7 @@ export class SuiDatepickerDirective
         if (this.componentInstance) {
             this.componentInstance.service.config = this.config;
             this.componentInstance.service.localeValues = this.localeValues;
+            this.componentInstance.service.currentDate = this.initialDate || new Date();
             this.componentInstance.service.selectedDate = this.selectedDate;
             this.componentInstance.service.maxDate = this.maxDate;
             this.componentInstance.service.minDate = this.minDate;

@@ -1,4 +1,3 @@
-
 import { ILocaleValues } from "../interfaces/values";
 
 const enGB:ILocaleValues = {
@@ -18,9 +17,18 @@ const enGB:ILocaleValues = {
         weekdaysNarrow: [
             "S", "M", "T", "W", "T", "F", "S"
         ],
+        timesOfDay: [
+            "a.m.", "p.m."
+        ],
+        timesOfDayUppercase: [
+            "AM", "PM"
+        ],
+        timesOfDayLowercase: [
+            "am", "pm"
+        ],
         formats: {
-            time: "HH:mm",
-            datetime: "D MMMM YYYY HH:mm",
+            time: "h:mm A",
+            datetime: "D MMMM YYYY h:mm A",
             date: "D MMMM YYYY",
             month: "MMMM YYYY",
             year: "YYYY"
@@ -41,7 +49,8 @@ const enGB:ILocaleValues = {
         },
         multi: {
             placeholder: "Select...",
-            maxSelectedMessage: "Max #{max} selections"
+            maxSelectedMessage: "Max #{max} selections",
+            selectedMessage: "#{count} selections"
         }
     }
 };

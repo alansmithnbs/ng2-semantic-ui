@@ -1,5 +1,5 @@
-import { Component } from "@angular/core";
-import { DatePrecision } from "../../../misc/util";
+import { Component, Renderer2 } from "@angular/core";
+import { DatePrecision } from "../../../misc/util/index";
 import { CalendarView, CalendarViewType } from "./calendar-view";
 import { CalendarItem } from "../directives/calendar-item";
 import { CalendarRangeService } from "../services/calendar-range.service";
@@ -19,13 +19,9 @@ export class CalendarRangeMonthService extends CalendarRangeService {
 <thead>
     <tr>
         <th colspan="3">
-            <span class="link" (click)="zoomOut()">{{ year }}</span>
-            <span class="prev link" [class.disabled]="!ranges.canMovePrevious" (click)="ranges.movePrevious()">
-                <i class="chevron left icon"></i>
-            </span>
-            <span class="next link" [class.disabled]="!ranges.canMoveNext" (click)="ranges.moveNext()">
-                <i class="chevron right icon"></i>
-            </span>
+            <sui-calendar-view-title [ranges]="ranges" (zoomOut)="zoomOut()">
+                {{ year }}
+            </sui-calendar-view-title>
         </th>
     </tr>
 </thead>
@@ -43,10 +39,10 @@ export class CalendarRangeMonthService extends CalendarRangeService {
 })
 export class SuiCalendarMonthView extends CalendarView {
     public get year():string {
-        return new DateParser("YYYY", this.service.localeValues).format(this.currentDate);
+        return new DateParser(this.service.localeValues.formats.year, this.service.localeValues).format(this.currentDate);
     }
 
-    constructor() {
-        super(CalendarViewType.Month, new CalendarRangeMonthService(DatePrecision.Year, 4, 3));
+    constructor(renderer:Renderer2) {
+        super(renderer, CalendarViewType.Month, new CalendarRangeMonthService(DatePrecision.Year, 4, 3));
     }
 }
